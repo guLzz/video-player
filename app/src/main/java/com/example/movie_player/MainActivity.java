@@ -1,27 +1,30 @@
 package com.example.movie_player;
 
-
 import android.app.ProgressDialog;
+import android.content.Intent;
 import android.media.MediaPlayer;
 import android.net.Uri;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.SeekBar;
 import android.widget.VideoView;
 
+
 import java.util.ArrayList;
 
-public class MainActivity extends AppCompatActivity{
+public class MainActivity extends AppCompatActivity {
 
-    //
-
+    private static final String TAG = "MainActivity";
+    
     ProgressDialog _dialog;
 
     private Button _bbutton, _pbutton, _fbutton, _setUrlButton;
     private VideoView _vView;
+
     private SeekBar _sBar;
 
     private EditText _URLtext;
@@ -36,6 +39,8 @@ public class MainActivity extends AppCompatActivity{
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        Log.d(TAG, "onCreate: Starting");
+        
         _bbutton = findViewById(R.id.BackVid);
         _pbutton = findViewById(R.id.PlayVid);
         _fbutton = findViewById(R.id.FowardVid);
@@ -51,8 +56,7 @@ public class MainActivity extends AppCompatActivity{
 
         _currentTime = 0;
 
-        //check what does
-        //_vView.setMediaController(null);
+        _vView.setMediaController(null);
 
         //StartPlaylist();
 
@@ -64,6 +68,14 @@ public class MainActivity extends AppCompatActivity{
         _playlist = new ArrayList<>();
         _playlist.add("https://img-9gag-fun.9cache.com/photo/aeMO8Zv_460svvp9.webm");
         //_vView.setVideoPath(_playlist.get(_queuePos));
+    }
+
+    public void LoadYT(View v){
+        String _url = _URLtext.getText().toString();
+
+        Intent _intent = new Intent(getBaseContext(),YTActivity.class);
+        _intent.putExtra("EXTRA_VIDEO_ID", _url);
+        startActivity(_intent);
     }
 
     public void LoadVid(View v){

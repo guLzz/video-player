@@ -13,6 +13,7 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.SeekBar;
+import android.widget.TextView;
 import android.widget.VideoView;
 
 
@@ -31,9 +32,11 @@ public class MainActivity extends AppCompatActivity {
     private SeekBar _sBar;
 
     private EditText _URLtext;
+    private TextView _currentTimeText , _videoDuration;
 
     //variables
     private int _currentTime;
+    private boolean _isSeeking;
     private ArrayList<String> _playlist;
     private int _queuePos;
 
@@ -47,6 +50,8 @@ public class MainActivity extends AppCompatActivity {
         _bbutton = findViewById(R.id.BackVid);
         _pbutton = findViewById(R.id.PlayVid);
         _fbutton = findViewById(R.id.FowardVid);
+        _currentTimeText = findViewById(R.id.currentTime);
+        _videoDuration = findViewById(R.id.videoDuration);
 
         //test button
         _setUrlButton = findViewById(R.id.button4);
@@ -54,6 +59,7 @@ public class MainActivity extends AppCompatActivity {
         _vView = findViewById(R.id.videoView);
 
         _sBar = findViewById(R.id.seekBar);
+        _sBar.setMax(_vView.getDuration());
 
         _URLtext = findViewById(R.id.URL);
 
@@ -95,7 +101,6 @@ public class MainActivity extends AppCompatActivity {
             _vView.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
                 @Override
                 public void onCompletion(MediaPlayer mp) {
-                    //_pbutton.setText("Pause");
                     _pbutton.setImageResource(R.mipmap.icpause_round);
                 }
             });
@@ -110,6 +115,7 @@ public class MainActivity extends AppCompatActivity {
             public void onPrepared(MediaPlayer mp) {
                 _dialog.dismiss();
                 mp.setLooping(false);
+                _videoDuration.setText(_vView.getDuration());
                 _vView.start();
             }
         });
@@ -123,8 +129,34 @@ public class MainActivity extends AppCompatActivity {
         }
         else{
             _vView.pause();
-            _pbutton.setImageResource(R.mipmap.ic_launcher_round);
+            _pbutton.setImageResource(R.mipmap.ic_launchernew_round);
         }
+    }
+
+    public void setBarListener(SeekBar bar){
+        bar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            int time;
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+                _vView.seekTo(time);
+                _currentTime = time;
+                _isSeeking = true;
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+                // TODO Auto-generated method stub
+            }
+
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                if(fromUser) {
+                    time = progress;
+                    _currentTimeText.setText(time);
+                }
+            }
+        });
     }
 
 }

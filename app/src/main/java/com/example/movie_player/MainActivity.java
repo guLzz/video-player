@@ -22,8 +22,7 @@ import java.util.ArrayList;
 public class MainActivity extends AppCompatActivity {
 
     private static final String TAG = "MainActivity";
-    
-    ProgressDialog _dialog;
+
 
     private Button _setUrlButton;
     private ImageButton _bbutton, _pbutton, _fbutton;
@@ -88,10 +87,6 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void LoadVid(View v){
-        _dialog = new ProgressDialog(MainActivity.this);
-        _dialog.setMessage("Please wait...");
-        _dialog.setCanceledOnTouchOutside(false);
-        _dialog.show();
 
         String _url = _URLtext.getText().toString();
 
@@ -113,10 +108,10 @@ public class MainActivity extends AppCompatActivity {
         _vView.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
             @Override
             public void onPrepared(MediaPlayer mp) {
-                _dialog.dismiss();
                 mp.setLooping(false);
-                _videoDuration.setText(_vView.getDuration());
+                //_videoDuration.setText(_vView.getDuration());
                 _vView.start();
+                _pbutton.setImageResource(R.mipmap.icpause_round);
             }
         });
     }

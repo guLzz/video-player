@@ -2,6 +2,7 @@ package com.example.movie_player;
 
 import android.app.ProgressDialog;
 import android.content.Intent;
+import android.graphics.drawable.Drawable;
 import android.media.MediaPlayer;
 import android.net.Uri;
 import android.support.v7.app.AppCompatActivity;
@@ -10,6 +11,7 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageButton;
 import android.widget.SeekBar;
 import android.widget.VideoView;
 
@@ -22,7 +24,8 @@ public class MainActivity extends AppCompatActivity {
     
     ProgressDialog _dialog;
 
-    private Button _bbutton, _pbutton, _fbutton, _setUrlButton;
+    private Button _setUrlButton;
+    private ImageButton _bbutton, _pbutton, _fbutton;
     private VideoView _vView;
 
     private SeekBar _sBar;
@@ -92,7 +95,8 @@ public class MainActivity extends AppCompatActivity {
             _vView.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
                 @Override
                 public void onCompletion(MediaPlayer mp) {
-                    _pbutton.setText("Pause");
+                    //_pbutton.setText("Pause");
+                    _pbutton.setImageResource(R.mipmap.icpause_round);
                 }
             });
         }
@@ -115,13 +119,12 @@ public class MainActivity extends AppCompatActivity {
 
         if(!_vView.isPlaying()){
             _vView.start();
-            _pbutton.setText("Pause");
+            _pbutton.setImageResource(R.mipmap.icpause_round);
         }
         else{
             _vView.pause();
-            _pbutton.setText("Play");
+            _pbutton.setImageResource(R.mipmap.ic_launcher_round);
         }
-
     }
 
 }

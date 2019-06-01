@@ -1,10 +1,10 @@
 package com.example.movie_player;
 
-import android.app.ProgressDialog;
 import android.content.Intent;
 import android.graphics.drawable.Drawable;
 import android.media.MediaPlayer;
 import android.net.Uri;
+import android.os.Handler;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -28,7 +28,11 @@ public class MainActivity extends AppCompatActivity {
     private ImageButton _bbutton, _pbutton, _fbutton;
     private VideoView _vView;
 
+    //seekbar
     private SeekBar _sBar;
+    private Handler _sbHandler;
+    private Runnable _sbRunnable;
+
 
     private EditText _URLtext;
     private TextView _currentTimeText , _videoDuration;
@@ -57,8 +61,8 @@ public class MainActivity extends AppCompatActivity {
 
         _vView = findViewById(R.id.videoView);
 
-        _sBar = findViewById(R.id.seekBar);
-        _sBar.setMax(_vView.getDuration());
+
+
 
         _URLtext = findViewById(R.id.URL);
 
@@ -66,8 +70,51 @@ public class MainActivity extends AppCompatActivity {
 
         _vView.setMediaController(null);
 
+
         //StartPlaylist();
 
+    }
+
+    //needs to be called everytime a new video is loaded
+    private void setupSB() {
+        _sbHandler = new Handler();
+
+        _sBar = findViewById(R.id.seekBar);
+        _sBar.setMax(_vView.getDuration());
+        _sBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean input) {
+                if(input){
+                    _vView.seekTo(progress);
+                }
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+
+            }
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+
+            }
+        });
+    }
+
+    //responsible for seekbar update
+    private void playCycle(){
+        _sBar.setProgress(_vView.getCurrentPosition());
+
+        if(_vView.isPlaying())
+        {
+            _sbRunnable = new Runnable() {
+                @Override
+                public void run() {
+                    playCycle();
+                }
+            };
+            _sbHandler.postDelayed(_sbRunnable,1000);
+        }
     }
 
     //sets up an empty playlist
@@ -109,8 +156,9 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onPrepared(MediaPlayer mp) {
                 mp.setLooping(false);
-                //_videoDuration.setText(_vView.getDuration());
+                setupSB();
                 _vView.start();
+                playCycle();
                 _pbutton.setImageResource(R.mipmap.icpause_round);
             }
         });
@@ -120,6 +168,7 @@ public class MainActivity extends AppCompatActivity {
 
         if(!_vView.isPlaying()){
             _vView.start();
+            playCycle();
             _pbutton.setImageResource(R.mipmap.icpause_round);
         }
         else{
@@ -128,30 +177,23 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    public void setBarListener(SeekBar bar){
-        bar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
-            int time;
+    public void FowardVid(View v){
+        _currentTime = _vView.getCurrentPosition();
 
-            @Override
-            public void onStopTrackingTouch(SeekBar seekBar) {
-                _vView.seekTo(time);
-                _currentTime = time;
-                _isSeeking = true;
-            }
-
-            @Override
-            public void onStartTrackingTouch(SeekBar seekBar) {
-                // TODO Auto-generated method stub
-            }
-
-            @Override
-            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                if(fromUser) {
-                    time = progress;
-                    _currentTimeText.setText(time);
-                }
-            }
-        });
+        //10s atm
+        _vView.seekTo(_currentTime + 10000);
     }
 
+    public void BackVid(View v){
+        _currentTime = _vView.getCurrentPosition();
+
+        //10s atm
+        _vView.seekTo(_currentTime - 10000);
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        _sbHandler.removeCallbacks(_sbRunnable);
+    }
 }

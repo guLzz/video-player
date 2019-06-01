@@ -1,6 +1,12 @@
 package com.example.movie_player;
 
 import android.content.Intent;
+import android.content.IntentFilter;
+import android.gesture.Gesture;
+import android.gesture.GestureLibraries;
+import android.gesture.GestureLibrary;
+import android.gesture.GestureOverlayView;
+import android.gesture.Prediction;
 import android.graphics.drawable.Drawable;
 import android.media.MediaPlayer;
 import android.net.Uri;
@@ -20,13 +26,14 @@ import android.widget.VideoView;
 import java.util.ArrayList;
 import java.util.concurrent.TimeUnit;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements GestureOverlayView.OnGesturePerformedListener{
 
     private static final String TAG = "MainActivity";
 
 
     private ImageButton _bbutton, _pbutton, _fbutton;
     private VideoView _vView;
+    private GestureLibrary gestureLibrary;
 
     //seekbar
     private SeekBar _sBar;
@@ -94,6 +101,11 @@ public class MainActivity extends AppCompatActivity {
 
 
         //StartPlaylist();
+
+        GestureOverlayView gestureOverlayView = (GestureOverlayView)findViewById(R.id.gestures);
+        gestureOverlayView.addOnGesturePerformedListener(this);
+        gestureLibrary = GestureLibraries.fromRawResource(this, R.raw.gestures);
+        if(!gestureLibrary.load()) finish();
 
     }
 
@@ -234,6 +246,33 @@ public class MainActivity extends AppCompatActivity {
 
         return _result;
     }
+
+    @Override
+    public void onGesturePerformed(GestureOverlayView overlay, Gesture gesture)
+    {
+        ArrayList<Prediction> predictions = gestureLibrary.recognize(gesture);
+
+        for(Prediction prediction : predictions)
+        {
+            if(prediction.score > 1.0)
+            {
+                switch (prediction.name)
+                {
+                    case "Forward":
+                        FowardVid(overlay);
+                        break;
+                    case "Backward":
+                        BackVid(overlay);
+                        break;
+                    case "Play":
+                        PlayVid(overlay);
+                        break;
+                }
+                break;
+            }
+        }
+    }
+
 
     @Override
     protected void onDestroy() {

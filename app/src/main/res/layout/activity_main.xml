@@ -6,16 +6,17 @@
     android:layout_height="match_parent"
     tools:context=".MainActivity">
 
+
     <android.gesture.GestureOverlayView
         android:id="@+id/gestures"
         android:layout_width="fill_parent"
         android:layout_height="fill_parent"
-        android:layout_marginStart="8dp"
-        android:layout_marginTop="8dp"
-        android:layout_marginEnd="8dp"
-        android:layout_marginBottom="8dp"
+        android:layout_marginStart="0dp"
+        android:layout_marginTop="0dp"
+        android:layout_marginEnd="0dp"
+        android:layout_marginBottom="0dp"
         android:eventsInterceptionEnabled="true"
-        android:gestureColor="@color/colorPrimaryDark"
+        android:gestureColor="@color/PaintMe"
         android:gestureStrokeType="single"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
@@ -166,25 +167,25 @@
 
         <ImageButton
             android:id="@+id/button4"
-            android:layout_width="104dp"
-            android:layout_height="wrap_content"
+            android:layout_width="80dp"
+            android:layout_height="60dp"
             android:layout_marginStart="28dp"
-            android:layout_marginBottom="16dp"
+            android:layout_marginBottom="12dp"
             android:onClick="LoadVid"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:srcCompat="@mipmap/ic_local_marker_round"/>
+            app:srcCompat="@mipmap/ic_local_marker_round" />
 
         <ImageButton
             android:id="@+id/button"
-            android:layout_width="105dp"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="92dp"
-            android:layout_marginBottom="16dp"
+            android:layout_width="81dp"
+            android:layout_height="60dp"
+            android:layout_marginStart="140dp"
+            android:layout_marginBottom="12dp"
             android:onClick="LoadYT"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintStart_toEndOf="@+id/button4"
-            app:srcCompat="@mipmap/ic_youtube_bt_round"/>
+            app:srcCompat="@mipmap/ic_youtube_bt_round" />
     </android.support.constraint.ConstraintLayout>
 
 </android.support.constraint.ConstraintLayout>

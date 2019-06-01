@@ -26,7 +26,7 @@ import android.widget.VideoView;
 import java.util.ArrayList;
 import java.util.concurrent.TimeUnit;
 
-public class MainActivity extends AppCompatActivity implements GestureOverlayView.OnGesturePerformedListener{
+public class MainActivity extends AppCompatActivity implements GestureOverlayView.OnGesturePerformedListener {
 
     private static final String TAG = "MainActivity";
 
@@ -47,7 +47,7 @@ public class MainActivity extends AppCompatActivity implements GestureOverlayVie
     //variables
     private int _currentTime;
     private boolean _isSeeking;
-    private ArrayList<String> _playlist;
+    private ArrayList<Uri> _playlist;
     private int _queuePos;
 
     @Override
@@ -68,7 +68,7 @@ public class MainActivity extends AppCompatActivity implements GestureOverlayVie
 
         _bbutton.setOnLongClickListener(new View.OnLongClickListener() {
             public boolean onLongClick(View v) {
-                //PreviousVid(v);
+                PreviousVid(v);
                 return true;
             }
         });
@@ -82,7 +82,7 @@ public class MainActivity extends AppCompatActivity implements GestureOverlayVie
 
         _fbutton.setOnLongClickListener(new View.OnLongClickListener() {
             public boolean onLongClick(View v) {
-                //NextVid(v);
+                NextVid(v);
                 return true;
             }
         });
@@ -100,13 +100,74 @@ public class MainActivity extends AppCompatActivity implements GestureOverlayVie
         _vView.setMediaController(null);
 
 
-        //StartPlaylist();
+        StartPlaylist();
+        SetVideoEndListener();
 
-        GestureOverlayView gestureOverlayView = (GestureOverlayView)findViewById(R.id.gestures);
+        GestureOverlayView gestureOverlayView = findViewById(R.id.gestures);
         gestureOverlayView.addOnGesturePerformedListener(this);
         gestureLibrary = GestureLibraries.fromRawResource(this, R.raw.gestures);
-        if(!gestureLibrary.load()) finish();
+        //if(!gestureLibrary.load()) finish();
 
+    }
+
+    private void PreviousVid(View v) {
+        if(_queuePos == 0){
+            _vView.seekTo(0);
+        }
+        else{
+            _queuePos--;
+            _vView.setVideoURI(_playlist.get(_queuePos));
+            _vView.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
+                @Override
+                public void onPrepared(MediaPlayer mp) {
+                    setupSB();
+                    _vView.start();
+                    playCycle();
+                    _pbutton.setImageResource(R.mipmap.icpause_round);
+                }
+            });
+        }
+    }
+
+    private void NextVid(View v) {
+        if(_queuePos == _playlist.size() - 1){
+            return;
+        }
+        else{
+            _queuePos++;
+            _vView.setVideoURI(_playlist.get(_queuePos));
+            _vView.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
+                @Override
+                public void onPrepared(MediaPlayer mp) {
+                    setupSB();
+                    _vView.start();
+                    playCycle();
+                    _pbutton.setImageResource(R.mipmap.icpause_round);
+                }
+            });
+        }
+    }
+
+    private void SetVideoEndListener() {
+        _vView.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
+            @Override
+            public void onCompletion(MediaPlayer mp) {
+                if(!_playlist.isEmpty() && _queuePos != _playlist.size() - 1) {
+                    _queuePos++;
+                    mp.reset();
+                    _vView.setVideoURI(_playlist.get(_queuePos));
+                    _vView.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
+                        @Override
+                        public void onPrepared(MediaPlayer mp) {
+                            setupSB();
+                            _vView.start();
+                            playCycle();
+                            _pbutton.setImageResource(R.mipmap.icpause_round);
+                        }
+                    });
+                }
+            }
+        });
     }
 
     //needs to be called everytime a new video is loaded
@@ -167,8 +228,8 @@ public class MainActivity extends AppCompatActivity implements GestureOverlayVie
     private void StartPlaylist(){
         _queuePos = 0;
         _playlist = new ArrayList<>();
-        _playlist.add("https://img-9gag-fun.9cache.com/photo/aeMO8Zv_460svvp9.webm");
-        //_vView.setVideoPath(_playlist.get(_queuePos));
+        //https://img-9gag-fun.9cache.com/photo/aeMO8Zv_460svvp9.webm
+        //https://v.redd.it/z08avb339n801/DASH_1_2_M
     }
 
     public void LoadYT(View v){
@@ -181,45 +242,51 @@ public class MainActivity extends AppCompatActivity implements GestureOverlayVie
 
     public void LoadVid(View v){
 
-        String _url = _URLtext.getText().toString();
+        final String _url = _URLtext.getText().toString();
 
-        try{
-            Uri _vUri = Uri.parse(_url);
-            _vView.setVideoURI(_vUri);
-            _vView.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
+        if(_playlist.isEmpty()) {
+            try {
+                Uri _vUri = Uri.parse(_url);
+                _playlist.add(_vUri);
+                _vView.setVideoURI(_vUri);
+
+            } catch (Exception ex) {
+
+            }
+            _vView.requestFocus();
+            _vView.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
                 @Override
-                public void onCompletion(MediaPlayer mp) {
+                public void onPrepared(MediaPlayer mp) {
+                    setupSB();
+                    _vView.start();
+                    playCycle();
                     _pbutton.setImageResource(R.mipmap.icpause_round);
                 }
             });
         }
-        catch (Exception ex){
+        else {
+            try{
+                Uri _vUri = Uri.parse(_url);
+                _playlist.add(_vUri);
+            }
+            catch (Exception ex){
 
+            }
         }
 
-        _vView.requestFocus();
-        _vView.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
-            @Override
-            public void onPrepared(MediaPlayer mp) {
-                mp.setLooping(false);
-                setupSB();
-                _vView.start();
-                playCycle();
-                _pbutton.setImageResource(R.mipmap.icpause_round);
-            }
-        });
+        _URLtext.setText("");
     }
 
     public void PlayVid(View v){
-
-        if(!_vView.isPlaying()){
-            _vView.start();
-            playCycle();
-            _pbutton.setImageResource(R.mipmap.icpause_round);
-        }
-        else{
-            _vView.pause();
-            _pbutton.setImageResource(R.mipmap.ic_launchernew_round);
+        if(_playlist.size() > 0) {
+            if (!_vView.isPlaying()) {
+                _vView.start();
+                playCycle();
+                _pbutton.setImageResource(R.mipmap.icpause_round);
+            } else {
+                _vView.pause();
+                _pbutton.setImageResource(R.mipmap.ic_launchernew_round);
+            }
         }
     }
 
@@ -228,6 +295,7 @@ public class MainActivity extends AppCompatActivity implements GestureOverlayVie
 
         //10s atm
         _vView.seekTo(_currentTime + 10000);
+        _sBar.setProgress(_vView.getCurrentPosition());
     }
 
     public void BackVid(View v){
@@ -235,6 +303,7 @@ public class MainActivity extends AppCompatActivity implements GestureOverlayVie
 
         //10s atm
         _vView.seekTo(_currentTime - 10000);
+        _sBar.setProgress(_vView.getCurrentPosition());
     }
 
     private String ConvertMs(int _ms){
@@ -283,6 +352,15 @@ public class MainActivity extends AppCompatActivity implements GestureOverlayVie
     @Override
     protected void onResume() {
         super.onResume();
-        _URLtext.setText("");
+        _vView.seekTo(_currentTime);
+        _vView.pause();
+
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        _currentTime = _vView.getCurrentPosition();
+        _vView.pause();
     }
 }

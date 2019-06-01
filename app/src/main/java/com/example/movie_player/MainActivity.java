@@ -18,6 +18,7 @@ import android.widget.VideoView;
 
 
 import java.util.ArrayList;
+import java.util.concurrent.TimeUnit;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -81,6 +82,11 @@ public class MainActivity extends AppCompatActivity {
 
         _sBar = findViewById(R.id.seekBar);
         _sBar.setMax(_vView.getDuration());
+        int _maxDurMS = _vView.getDuration();
+        String _maxDur = ConvertMs(_maxDurMS);
+
+        _videoDuration.setText(_maxDur);
+
         _sBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean input) {
@@ -103,6 +109,8 @@ public class MainActivity extends AppCompatActivity {
 
     //responsible for seekbar update
     private void playCycle(){
+        String _newTime = "";
+
         _sBar.setProgress(_vView.getCurrentPosition());
 
         if(_vView.isPlaying())
@@ -114,6 +122,11 @@ public class MainActivity extends AppCompatActivity {
                 }
             };
             _sbHandler.postDelayed(_sbRunnable,1000);
+
+            _currentTime = _vView.getCurrentPosition();
+
+            _newTime = ConvertMs(_currentTime);
+            _currentTimeText.setText(_newTime);
         }
     }
 
@@ -129,7 +142,7 @@ public class MainActivity extends AppCompatActivity {
         String _url = _URLtext.getText().toString();
 
         Intent _intent = new Intent(getBaseContext(),YTActivity.class);
-        _intent.putExtra("EXTRA_VIDEO_ID", _url);
+        _intent.putExtra("EXTRA_VIDEO_URL", _url);
         startActivity(_intent);
     }
 
@@ -191,9 +204,25 @@ public class MainActivity extends AppCompatActivity {
         _vView.seekTo(_currentTime - 10000);
     }
 
+    private String ConvertMs(int _ms){
+        String _result = "";
+
+        _result = String.format("%02d:%02d",
+                    TimeUnit.MILLISECONDS.toMinutes(_ms),
+                    TimeUnit.MILLISECONDS.toSeconds(_ms) - TimeUnit.MILLISECONDS.toMinutes(_ms));
+
+        return _result;
+    }
+
     @Override
     protected void onDestroy() {
         super.onDestroy();
         _sbHandler.removeCallbacks(_sbRunnable);
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        _URLtext.setText("");
     }
 }

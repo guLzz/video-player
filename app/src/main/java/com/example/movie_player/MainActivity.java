@@ -106,7 +106,7 @@ public class MainActivity extends AppCompatActivity implements GestureOverlayVie
         GestureOverlayView gestureOverlayView = findViewById(R.id.gestures);
         gestureOverlayView.addOnGesturePerformedListener(this);
         gestureLibrary = GestureLibraries.fromRawResource(this, R.raw.gestures);
-        //if(!gestureLibrary.load()) finish();
+        if(!gestureLibrary.load()) finish();
 
     }
 
@@ -321,21 +321,32 @@ public class MainActivity extends AppCompatActivity implements GestureOverlayVie
     {
         ArrayList<Prediction> predictions = gestureLibrary.recognize(gesture);
 
+
         for(Prediction prediction : predictions)
         {
             if(prediction.score > 1.0)
             {
                 switch (prediction.name)
                 {
-                    case "Forward":
+                    case "Foward":
                         FowardVid(overlay);
                         break;
-                    case "Backward":
+                    case "Back":
                         BackVid(overlay);
                         break;
                     case "Play":
                         PlayVid(overlay);
                         break;
+                    case "Next":
+                    case "Next2":
+                        NextVid(overlay);
+                        break;
+                    case "Previous":
+                    case "Previous2":
+                        BackVid(overlay);
+                        break;
+
+
                 }
                 break;
             }

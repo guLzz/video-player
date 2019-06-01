@@ -1,13 +1,11 @@
 package com.example.movie_player;
 
 import android.content.Intent;
-import android.content.IntentFilter;
 import android.gesture.Gesture;
 import android.gesture.GestureLibraries;
 import android.gesture.GestureLibrary;
 import android.gesture.GestureOverlayView;
 import android.gesture.Prediction;
-import android.graphics.drawable.Drawable;
 import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Handler;
@@ -15,7 +13,6 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
-import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.SeekBar;
@@ -28,38 +25,64 @@ import java.util.concurrent.TimeUnit;
 
 public class MainActivity extends AppCompatActivity implements GestureOverlayView.OnGesturePerformedListener {
 
-    private static final String TAG = "MainActivity";
+    //videos used in testing direct link
+    //https://img-9gag-fun.9cache.com/photo/aeMO8Zv_460svvp9.webm
+    //https://v.redd.it/z08avb339n801/DASH_1_2_M
 
-
+    //Objects
     private ImageButton _bbutton, _pbutton, _fbutton;
     private VideoView _vView;
-    private GestureLibrary gestureLibrary;
-
-    //seekbar
     private SeekBar _sBar;
+
+    //Resources
+    private GestureLibrary gestureLibrary;
     private Handler _sbHandler;
     private Runnable _sbRunnable;
 
-
+    //texts
     private EditText _URLtext;
     private TextView _currentTimeText , _videoDuration;
 
     //variables
-    private int _currentTime;
-    private boolean _isSeeking;
+    private int _currentTime = 0;
     private ArrayList<Uri> _playlist;
     private int _queuePos;
 
+    //Create
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        Log.d(TAG, "onCreate: Starting");
-
+        //buttons
         _pbutton = findViewById(R.id.PlayVid);
-
         _bbutton = findViewById(R.id.BackVid);
+        _fbutton = findViewById(R.id.ForwardVid);
+        setButtonListeners();
+
+        //texts
+        _currentTimeText = findViewById(R.id.currentTime);
+        _videoDuration = findViewById(R.id.videoDuration);
+        _URLtext = findViewById(R.id.URL);
+
+        //video view
+        _vView = findViewById(R.id.videoView);
+        _vView.setMediaController(null);
+
+        //playlist
+        StartPlaylist();
+        SetVideoEndListener();
+
+        //gestures
+        GestureOverlayView gestureOverlayView = findViewById(R.id.gestures);
+        gestureOverlayView.addOnGesturePerformedListener(this);
+        gestureLibrary = GestureLibraries.fromRawResource(this, R.raw.gestures);
+        if(!gestureLibrary.load()) finish();
+
+    }
+
+    //Initializations
+    private void setButtonListeners() {
         _bbutton.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 BackVid(v);
@@ -73,10 +96,9 @@ public class MainActivity extends AppCompatActivity implements GestureOverlayVie
             }
         });
 
-        _fbutton = findViewById(R.id.FowardVid);
         _fbutton.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
-                FowardVid(v);
+                ForwardVid(v);
             }
         });
 
@@ -86,30 +108,45 @@ public class MainActivity extends AppCompatActivity implements GestureOverlayVie
                 return true;
             }
         });
-        _currentTimeText = findViewById(R.id.currentTime);
-        _videoDuration = findViewById(R.id.videoDuration);
-
-        //test button
-
-        _vView = findViewById(R.id.videoView);
-
-        _URLtext = findViewById(R.id.URL);
-
-        _currentTime = 0;
-
-        _vView.setMediaController(null);
-
-
-        StartPlaylist();
-        SetVideoEndListener();
-
-        GestureOverlayView gestureOverlayView = findViewById(R.id.gestures);
-        gestureOverlayView.addOnGesturePerformedListener(this);
-        gestureLibrary = GestureLibraries.fromRawResource(this, R.raw.gestures);
-        if(!gestureLibrary.load()) finish();
 
     }
 
+    private void setupSB() {
+        _sbHandler = new Handler();
+
+        _sBar = findViewById(R.id.seekBar);
+        _sBar.setMax(_vView.getDuration());
+        int _maxDurMS = _vView.getDuration();
+        String _maxDur = ConvertMs(_maxDurMS);
+
+        _videoDuration.setText(_maxDur);
+
+        _sBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean input) {
+                if(input){
+                    _vView.seekTo(progress);
+                }
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+
+            }
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+
+            }
+        });
+    }
+
+    private void StartPlaylist(){
+        _queuePos = 0;
+        _playlist = new ArrayList<>();
+    }
+
+    //Video Actions
     private void PreviousVid(View v) {
         if(_queuePos == 0){
             _vView.seekTo(0);
@@ -170,38 +207,36 @@ public class MainActivity extends AppCompatActivity implements GestureOverlayVie
         });
     }
 
-    //needs to be called everytime a new video is loaded
-    private void setupSB() {
-        _sbHandler = new Handler();
-
-        _sBar = findViewById(R.id.seekBar);
-        _sBar.setMax(_vView.getDuration());
-        int _maxDurMS = _vView.getDuration();
-        String _maxDur = ConvertMs(_maxDurMS);
-
-        _videoDuration.setText(_maxDur);
-
-        _sBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
-            @Override
-            public void onProgressChanged(SeekBar seekBar, int progress, boolean input) {
-                if(input){
-                    _vView.seekTo(progress);
-                }
+    public void PlayVid(View v){
+        if(_playlist.size() > 0) {
+            if (!_vView.isPlaying()) {
+                _vView.start();
+                playCycle();
+                _pbutton.setImageResource(R.mipmap.icpause_round);
+            } else {
+                _vView.pause();
+                _pbutton.setImageResource(R.mipmap.ic_launchernew_round);
             }
-
-            @Override
-            public void onStartTrackingTouch(SeekBar seekBar) {
-
-            }
-
-            @Override
-            public void onStopTrackingTouch(SeekBar seekBar) {
-
-            }
-        });
+        }
     }
 
-    //responsible for seekbar update
+    public void ForwardVid(View v){
+        _currentTime = _vView.getCurrentPosition();
+
+        //10s atm
+        _vView.seekTo(_currentTime + 10000);
+        _sBar.setProgress(_vView.getCurrentPosition());
+    }
+
+    public void BackVid(View v){
+        _currentTime = _vView.getCurrentPosition();
+
+        //10s atm
+        _vView.seekTo(_currentTime - 10000);
+        _sBar.setProgress(_vView.getCurrentPosition());
+    }
+
+    //Updating functions
     private void playCycle(){
         String _newTime = "";
 
@@ -222,14 +257,6 @@ public class MainActivity extends AppCompatActivity implements GestureOverlayVie
             _newTime = ConvertMs(_currentTime);
             _currentTimeText.setText(_newTime);
         }
-    }
-
-    //sets up an empty playlist
-    private void StartPlaylist(){
-        _queuePos = 0;
-        _playlist = new ArrayList<>();
-        //https://img-9gag-fun.9cache.com/photo/aeMO8Zv_460svvp9.webm
-        //https://v.redd.it/z08avb339n801/DASH_1_2_M
     }
 
     public void LoadYT(View v){
@@ -277,35 +304,7 @@ public class MainActivity extends AppCompatActivity implements GestureOverlayVie
         _URLtext.setText("");
     }
 
-    public void PlayVid(View v){
-        if(_playlist.size() > 0) {
-            if (!_vView.isPlaying()) {
-                _vView.start();
-                playCycle();
-                _pbutton.setImageResource(R.mipmap.icpause_round);
-            } else {
-                _vView.pause();
-                _pbutton.setImageResource(R.mipmap.ic_launchernew_round);
-            }
-        }
-    }
-
-    public void FowardVid(View v){
-        _currentTime = _vView.getCurrentPosition();
-
-        //10s atm
-        _vView.seekTo(_currentTime + 10000);
-        _sBar.setProgress(_vView.getCurrentPosition());
-    }
-
-    public void BackVid(View v){
-        _currentTime = _vView.getCurrentPosition();
-
-        //10s atm
-        _vView.seekTo(_currentTime - 10000);
-        _sBar.setProgress(_vView.getCurrentPosition());
-    }
-
+    //Auxiliary Functions
     private String ConvertMs(int _ms){
         String _result = "";
 
@@ -316,9 +315,9 @@ public class MainActivity extends AppCompatActivity implements GestureOverlayVie
         return _result;
     }
 
+    //functions overriden
     @Override
-    public void onGesturePerformed(GestureOverlayView overlay, Gesture gesture)
-    {
+    public void onGesturePerformed(GestureOverlayView overlay, Gesture gesture){
         ArrayList<Prediction> predictions = gestureLibrary.recognize(gesture);
 
 
@@ -329,7 +328,7 @@ public class MainActivity extends AppCompatActivity implements GestureOverlayVie
                 switch (prediction.name)
                 {
                     case "Foward":
-                        FowardVid(overlay);
+                        ForwardVid(overlay);
                         break;
                     case "Back":
                         BackVid(overlay);
@@ -343,16 +342,13 @@ public class MainActivity extends AppCompatActivity implements GestureOverlayVie
                         break;
                     case "Previous":
                     case "Previous2":
-                        BackVid(overlay);
+                        PreviousVid(overlay);
                         break;
-
-
                 }
                 break;
             }
         }
     }
-
 
     @Override
     protected void onDestroy() {

@@ -59,7 +59,14 @@ public class YTActivity extends YouTubeBaseActivity {
             int _andPos = url.indexOf("&");
 
             if(_vIdPos == -1){
-                _videoID = url;
+                int _index = url.indexOf("tu.be");
+                if(_index != -1 )
+                {
+                    _videoID = url.substring(_index + 6);
+                }
+                else {
+                    _videoID = url;
+                }
             }
             else if(_andPos != -1){
                 _videoID = url.substring(_vIdPos + 2 ,_andPos);

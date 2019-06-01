@@ -25,7 +25,6 @@ public class MainActivity extends AppCompatActivity {
     private static final String TAG = "MainActivity";
 
 
-    private Button _setUrlButton;
     private ImageButton _bbutton, _pbutton, _fbutton;
     private VideoView _vView;
 
@@ -50,20 +49,42 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         Log.d(TAG, "onCreate: Starting");
-        
-        _bbutton = findViewById(R.id.BackVid);
+
         _pbutton = findViewById(R.id.PlayVid);
+
+        _bbutton = findViewById(R.id.BackVid);
+        _bbutton.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                BackVid(v);
+            }
+        });
+
+        _bbutton.setOnLongClickListener(new View.OnLongClickListener() {
+            public boolean onLongClick(View v) {
+                //PreviousVid(v);
+                return true;
+            }
+        });
+
         _fbutton = findViewById(R.id.FowardVid);
+        _fbutton.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                FowardVid(v);
+            }
+        });
+
+        _fbutton.setOnLongClickListener(new View.OnLongClickListener() {
+            public boolean onLongClick(View v) {
+                //NextVid(v);
+                return true;
+            }
+        });
         _currentTimeText = findViewById(R.id.currentTime);
         _videoDuration = findViewById(R.id.videoDuration);
 
         //test button
-        _setUrlButton = findViewById(R.id.button4);
 
         _vView = findViewById(R.id.videoView);
-
-
-
 
         _URLtext = findViewById(R.id.URL);
 

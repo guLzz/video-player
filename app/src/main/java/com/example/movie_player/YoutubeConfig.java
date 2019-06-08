@@ -4,7 +4,7 @@ public class YoutubeConfig {
     public YoutubeConfig() {
     }
 
-    private static final String _apiKey = "AIzaSyDD8svXYMfqIdAc9sFLsAz0aJnlGo9mfWM";
+    private static final String _apiKey = "APIkeyHERE";
 
     public static String getApiKey() {
         return _apiKey;
